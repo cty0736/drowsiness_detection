@@ -1,4 +1,5 @@
 from socket import *
+import time
 
 HOST = ''
 PORT = 1119
@@ -20,7 +21,8 @@ while True:
 
     data = client_socket.recv(BUFSIZE)
     print('Received Data: ', data.decode('utf-8'))
-
+    time.sleep(1)
+    
     if not data:
         break
 

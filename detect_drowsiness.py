@@ -57,7 +57,7 @@ ap.add_argument('-w', "--webcam", type = str, default = 0,
 args = vars(ap.parse_args())
 
 
-EYE_AR_THRESH = 0.25
+EYE_AR_THRESH = 0.20
 EYE_AR_CONSEC_FRAMES = 48
 
 COUNTER = 0
@@ -117,11 +117,12 @@ while True:
 
                 cv2.putText(frame, "Drowsing!!", (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                    
-                message = '[client] Drowsing!!'
+            if COUNTER >= EYE_AR_CONSEC_FRAMES:
+                message = '[client] Drowsing!!\n'
+                time.sleep(1)
                 client_socket.send(message.encode('utf-8'))
 
-                #data = client_socket.recv(BUFSIZE)
+            #data = client_socket.recv(BUFSIZE)
         
         else:
             COUNTER = 0
@@ -131,10 +132,11 @@ while True:
             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         
     cv2.imshow("Frame", frame)
+    
     key = cv2.waitKey(1) & 0xFF
 
     if key == ord('q'):
         break
-
+print('closing...')
 cv2.destroyAllWindows()
 vs.stop()
