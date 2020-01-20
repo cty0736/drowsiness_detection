@@ -1,5 +1,6 @@
 from scipy.spatial import distance as dist
 #from imutils.video import VideoStream
+from imutils.video import WebcamVideoStream
 from imutils import face_utils
 from threading import Thread
 import numpy as np
@@ -34,8 +35,8 @@ except Exception as e:
 
 def sound_alarm(path):
     # play an alarm sound
-    playsound.playsound("./alarm.wav")
-
+    #playsound.playsound("./alarm.wav")
+    playsound.playsound("/home/pi/cty/Drowsiness-detection/alarm.wav")
 
 def eye_aspect_ratio(eye):
     A = dist.euclidean(eye[1], eye[5])
@@ -73,17 +74,18 @@ predictor = dlib.shape_predictor(args["shape_predictor"])
 
 
 print("[INFO] Starting video stream thread...")
-cam = cv2.VideoCapture(0) #d
-cam.set(3, 320) #d
-cam.set(4, 240) #d
+cam = WebcamVideoStream(src=0).start()
+#cam = cv2.VideoCapture(0) #d
+#cam.set(3, 320) #d
+#cam.set(4, 240) #d
 
 time.sleep(1.0)
 
 
 # loop over frames from the video stream
 while True:
-    ret, frame = cam.read()
-    #frame = imutils.resize(frame, width = 640)
+    frame = cam.read()
+    frame = imutils.resize(frame, width = 400)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     rects = detector(gray, 0)
@@ -93,17 +95,17 @@ while True:
         shape = predictor(gray, rect)
         shape = face_utils.shape_to_np(shape)
 
-        leftEye = shape[lStart:lEnd]
-        rightEye = shape[rStart:rEnd]
+        leftEye = shape[lStart:lEnd] #
+        rightEye = shape[rStart:rEnd] #
         leftEAR = eye_aspect_ratio(leftEye)
         rightEAR = eye_aspect_ratio(rightEye)
 
         ear = (leftEAR + rightEAR) / 2.0
 
-        leftEyeHull = cv2.convexHull(leftEye)
-        rightEyeHull = cv2.convexHull(rightEye)
-        cv2.drawContours(frame, [leftEyeHull], -1, (66, 244, 197), 1)
-        cv2.drawContours(frame, [rightEyeHull], -1, (66, 244, 197), 1)
+        leftEyeHull = cv2.convexHull(leftEye) #
+        rightEyeHull = cv2.convexHull(rightEye) #
+        cv2.drawContours(frame, [leftEyeHull], -1, (66, 244, 197), 1) #
+        cv2.drawContours(frame, [rightEyeHull], -1, (66, 244, 197), 1) #
 
         if ear < EYE_AR_THRESH:
             COUNTER += 1
@@ -143,4 +145,4 @@ while True:
         break
 print('closing...')
 cv2.destroyAllWindows()
-cam.release()
+cam.stop()
