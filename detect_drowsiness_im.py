@@ -10,12 +10,13 @@ import imutils
 import time
 import dlib
 import cv2
-'''
+
 from socket import *
 
 HOST = '127.0.0.1'
+#HOST = '27.96.130.164'
 #HOST = '192.168.0.11'
-PORT = 1119
+PORT = 1117
 BUFSIZE = 1024
 ADDR = (HOST,PORT)
 
@@ -29,14 +30,19 @@ try:
 
 except Exception as e:
     print('connection error %s:%s'%ADDR)
-    '''
+    
 
 
 
 def sound_alarm(path):
     # play an alarm sound
-    #playsound.playsound("./alarm.wav")
-    playsound.playsound("/home/pi/cty/Drowsiness-detection/alarm.wav")
+    playsound.playsound("./alarm.wav")
+    #playsound.playsound("/home/pi/cty/Drowsiness-detection/alarm.wav")
+def sending(data):
+    message = 'Alert(DWS)'
+    message = message.encode('utf-8')
+    client_socket.send(message)    
+
 
 def eye_aspect_ratio(eye):
     A = dist.euclidean(eye[1], eye[5])
@@ -58,8 +64,8 @@ ap.add_argument('-w', "--webcam", type = str, default = 0,
 args = vars(ap.parse_args())
 
 
-EYE_AR_THRESH = 0.30
-EYE_AR_CONSEC_FRAMES = 30
+EYE_AR_THRESH = 0.23
+EYE_AR_CONSEC_FRAMES = 48
 
 COUNTER = 0
 ALARM_ON = False
@@ -119,25 +125,36 @@ while True:
                             args=(args["alarm"],))
                         t.daemon = True
                         t.start()
+                                       
+                        th = Thread(target=sending,
+                            args=(args["alarm"],))
+                        th.daemon = True
+                        th.start()
 
                 cv2.putText(frame, "Drowsing!!", (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
             '''
             if COUNTER >= EYE_AR_CONSEC_FRAMES:
-                message = '[client] Drowsing!!\n'
-                time.sleep(1)
-                client_socket.send(message.encode('utf-8'))
-
-            #data = client_socket.recv(BUFSIZE)
+                message = 'Alert(DWS)'                
+                th = Thread(target=sending(message.encode('utf-8'),args=())
+                th.daemon = True
+                th.start()
             '''
-        
         else:
             COUNTER = 0
             ALARM_ON = False
 
         cv2.putText(frame, "EAR: {:.2f}".format(ear), (150, 30),
             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        
+    '''    
+    getdata = client_socket.recv(BUFSIZE)
+    if getdata.decode('utf-8') == 'Webcam OFF':
+        cam.stop()
+    elif getdata.decode('utf-8') == 'Webcam ON':
+        cam.read()
+    '''
+    
+
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
